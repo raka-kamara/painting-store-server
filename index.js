@@ -26,11 +26,18 @@ async function run() {
     await client.connect();
 
     const paintingCollection = client.db('paintingDB').collection('painting');
+    const userCollection = client.db('paintingDB').collection('user');
 
     app.get('/painting', async(req, res)=>{
         const cursor = paintingCollection.find();
         const result = await cursor.toArray();
         res.send(result);
+    })
+
+    app.get('/myPainting/:email', async(req, res) =>{
+      console.log(req.params.email);
+      const result = await paintingCollection.find({email:req.params.email}).toArray();
+      res.send(result);
     })
 
     app.post("/painting", async (req, res) => {
@@ -39,6 +46,15 @@ async function run() {
       const result = await paintingCollection.insertOne(newPainting);
       res.send(result);
     });
+
+    // user's api
+    app.post('/user', async(req, res)=>{
+      const user = req.body;
+      console.log(user);
+      const result = await userCollection.insertOner(user);
+      res.send(result);
+
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
