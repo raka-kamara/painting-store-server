@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -25,20 +25,54 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const paintingCollection = client.db('paintingDB').collection('painting');
-    const userCollection = client.db('paintingDB').collection('user');
+    const paintingCollection = client.db("paintingDB").collection("painting");
+    const userCollection = client.db("paintingDB").collection("user");
 
-    app.get('/painting', async(req, res)=>{
-        const cursor = paintingCollection.find();
-        const result = await cursor.toArray();
-        res.send(result);
-    })
+    app.get("/painting", async (req, res) => {
+      const cursor = paintingCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
-    app.get('/myPainting/:email', async(req, res) =>{
+    // reading with email
+    app.get("/myPainting/:email", async (req, res) => {
       console.log(req.params.email);
-      const result = await paintingCollection.find({email:req.params.email}).toArray();
+      const result = await paintingCollection
+        .find({ email: req.params.email })
+        .toArray();
+      res.send(result);
+    });
+
+    // get with id
+    app.get("/singleProduct/:id", async (req, res) => {
+      const result = await paintingCollection.findOne({ _id: new ObjectId(req.params.id),
+       });
+      res.send(result);
+    });
+
+    app.put("/updateProduct/:id", async(req, res)=>{
+      const query = {_id: new ObjectId(req.params.id)};
+      const data ={
+        $set:{
+          name:req.body.name,
+          price:req.body.price,
+          rating:req.body.rating,
+          customization:req.body.customization,
+          stock:req.body.stock,
+          photo:req.body.photo
+        }
+      }
+      const result = paintingCollection.updateOne(query, data)
+      console.log(result)
       res.send(result);
     })
+    // Delete
+    app.delete("/painting/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await paintingCollection.deleteOne(query);
+      res.send(result);
+    });
 
     app.post("/painting", async (req, res) => {
       const newPainting = req.body;
@@ -48,13 +82,12 @@ async function run() {
     });
 
     // user's api
-    app.post('/user', async(req, res)=>{
+    app.post("/user", async (req, res) => {
       const user = req.body;
       console.log(user);
       const result = await userCollection.insertOner(user);
       res.send(result);
-
-    })
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
