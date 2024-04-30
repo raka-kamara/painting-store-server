@@ -49,6 +49,16 @@ async function run() {
       res.send(result);
     });
 
+    // Express route for fetching paintings by category
+    app.get("/category/:category", async (req, res) => {
+      const { category } = req.params;
+      const query = { category: category };
+      const cursor = categoryCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+
     // get with id
     app.get("/singleProduct/:id", async (req, res) => {
       const result = await paintingCollection.findOne({
@@ -64,6 +74,8 @@ async function run() {
       });
       res.send(result);
     });
+
+    
 
     app.put("/updateProduct/:id", async (req, res) => {
       const query = { _id: new ObjectId(req.params.id) };
@@ -82,7 +94,6 @@ async function run() {
       res.send(result);
     });
 
-    
     // Delete
     app.delete("/painting/:id", async (req, res) => {
       const id = req.params.id;
